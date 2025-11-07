@@ -299,11 +299,33 @@ class MicroondasMultifuncional:
         stats_tab = tk.Frame(notebook, bg='#2d2d2d')
         notebook.add(stats_tab, text='📊 Estadísticas')
         
-        # Canvas para gráficos personalizados
-        self.stats_canvas = tk.Canvas(stats_tab, bg='#1a1a1a', highlightthickness=0)
-        self.stats_canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Crear sistema de scroll para estadísticas
+        stats_container = tk.Frame(stats_tab, bg='#2d2d2d')
+        stats_container.pack(fill=tk.BOTH, expand=True)
         
-        self.dibujar_estadisticas()
+        # Canvas y scrollbar para estadísticas
+        canvas_stats = tk.Canvas(stats_container, bg='#1a1a1a', highlightthickness=0)
+        scrollbar_stats = tk.Scrollbar(stats_container, orient="vertical", command=canvas_stats.yview)
+        
+        # Frame scrollable dentro del canvas
+        self.scrollable_stats = tk.Frame(canvas_stats, bg='#1a1a1a')
+        
+        self.scrollable_stats.bind(
+            "<Configure>",
+            lambda e: canvas_stats.configure(scrollregion=canvas_stats.bbox("all"))
+        )
+        
+        canvas_stats.create_window((0, 0), window=self.scrollable_stats, anchor="nw")
+        canvas_stats.configure(yscrollcommand=scrollbar_stats.set)
+        
+        # Empaquetar canvas y scrollbar
+        canvas_stats.pack(side="left", fill="both", expand=True, padx=10, pady=10)
+        scrollbar_stats.pack(side="right", fill="y")
+        
+        # Canvas para gráficos dentro del frame scrollable
+        self.stats_canvas = tk.Canvas(self.scrollable_stats, bg='#1a1a1a', highlightthickness=0,
+                                     width=800, height=1200)  # Altura aumentada para contenido extenso
+        self.stats_canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # === TAB 3: INFORMACIÓN ===
         info_tab = tk.Frame(notebook, bg='#2d2d2d')
@@ -510,8 +532,8 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
         
     def dibujar_estadisticas(self):
         self.stats_canvas.delete("all")
-        w = self.stats_canvas.winfo_width() if self.stats_canvas.winfo_width() > 1 else 600
-        h = self.stats_canvas.winfo_height() if self.stats_canvas.winfo_height() > 1 else 600
+        w = 800  # Ancho fijo para el canvas de estadísticas
+        h = 1200  # Altura fija para permitir scroll
         
         # Título
         self.stats_canvas.create_text(w//2, 30, text="📊 ANÁLISIS ENERGÉTICO EN TIEMPO REAL", 
@@ -612,6 +634,62 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
                                      text=stats_text, 
                                      font=('Arial', 10), fill='#00ff00')
         
+        # Información adicional extensa
+        y_extra = y_stats + 120
+        
+        # Eficiencia por combustible
+        eficiencia_frame = tk.Frame(self.scrollable_stats, bg='#2d2d2d', relief=tk.RAISED, bd=2)
+        eficiencia_frame.place(x=50, y=y_extra, width=w-100, height=200)
+        
+        eficiencia_label = tk.Label(eficiencia_frame, text="📈 EFICIENCIA POR COMBUSTIBLE", 
+                                   font=('Arial', 12, 'bold'), bg='#2d2d2d', fg='#ffffff')
+        eficiencia_label.pack(pady=10)
+        
+        # Tabla de eficiencia
+        eficiencia_text = tk.Text(eficiencia_frame, bg='#1a1a1a', fg='#ffffff', 
+                                 font=('Arial', 10), width=70, height=8, relief=tk.FLAT)
+        eficiencia_text.pack(padx=10, pady=10, fill=tk.BOTH)
+        
+        tabla_content = "Combustible           kcal/min   Eficiencia   Costo Relativo\n"
+        tabla_content += "──────────────────────────────────────────────────────────\n"
+        tabla_content += "⚡ Energía Eléctrica     2.5       Alta           Medio\n"
+        tabla_content += "🪵 Madera                4.0       Media          Bajo\n"
+        tabla_content += "🍂 Hojas Secas           3.0       Baja           Muy Bajo\n"
+        tabla_content += "⛽ Combustible           5.5       Muy Alta       Alto\n"
+        
+        eficiencia_text.insert('1.0', tabla_content)
+        eficiencia_text.config(state=tk.DISABLED)
+        
+        # Historial detallado
+        y_historial = y_extra + 230
+        
+        historial_frame = tk.Frame(self.scrollable_stats, bg='#2d2d2d', relief=tk.RAISED, bd=2)
+        historial_frame.place(x=50, y=y_historial, width=w-100, height=300)
+        
+        historial_label = tk.Label(historial_frame, text="📋 HISTORIAL DETALLADO", 
+                                  font=('Arial', 12, 'bold'), bg='#2d2d2d', fg='#ffffff')
+        historial_label.pack(pady=10)
+        
+        historial_text = tk.Text(historial_frame, bg='#1a1a1a', fg='#ffffff', 
+                                font=('Courier', 9), width=80, height=12, relief=tk.FLAT)
+        historial_scroll = tk.Scrollbar(historial_frame, command=historial_text.yview)
+        historial_text.configure(yscrollcommand=historial_scroll.set)
+        
+        historial_text.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.BOTH)
+        historial_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Contenido del historial
+        if self.historial_tiempo:
+            hist_content = "Minuto   kcal Acumuladas   Combustible Actual\n"
+            hist_content += "─────────────────────────────────────────────\n"
+            for i, (tiempo, kcal) in enumerate(zip(self.historial_tiempo, self.historial_kcal)):
+                hist_content += f"{tiempo:^7} {kcal:^15.1f}   {self.combustible_actual.get()}\n"
+        else:
+            hist_content = "No hay datos de historial disponibles.\nInicie la cocción para generar datos."
+        
+        historial_text.insert('1.0', hist_content)
+        historial_text.config(state=tk.DISABLED)
+
 # Ejecutar aplicación
 if __name__ == "__main__":
     root = tk.Tk()
