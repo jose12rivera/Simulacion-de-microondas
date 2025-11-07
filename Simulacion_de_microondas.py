@@ -611,7 +611,7 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
         self.stats_canvas.create_text(w//2, y_stats+45, 
                                      text=stats_text, 
                                      font=('Arial', 10), fill='#00ff00')
-
+        
 # Ejecutar aplicación
 if __name__ == "__main__":
     root = tk.Tk()
