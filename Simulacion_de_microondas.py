@@ -337,13 +337,11 @@ class MicroondasMultifuncional:
         info_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         info_content = """
-╔═══════════════════════════════════════════════════════════╗
-║        MICROONDAS MULTIFUNCIONAL 3000 - MANUAL           ║
-╚═══════════════════════════════════════════════════════════╝
-
+=========================================================
+==       MICROONDAS MULTIFUNCIONAL 3000 - MANUAL         ==
+=========================================================
 🔥 COMBUSTIBLES DISPONIBLES:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 ⚡ Energía Eléctrica: 2.5 kcal/h por minuto
    • Limpio y eficiente
    • Ideal para uso doméstico
@@ -364,20 +362,16 @@ class MicroondasMultifuncional:
    • Calentamiento ultra-rápido
    • Uso industrial
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 🍖 ALIMENTOS Y TIEMPOS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 🍗 Pollo: 25 minutos
 🦃 Pavo: 45 minutos  
 🥩 Res: 35 minutos
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 ⚙️ INSTRUCCIONES DE USO:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 1. Seleccione el tipo de combustible deseado
 2. Elija el alimento a cocinar
 3. Ajuste la potencia (10% - 100%)
@@ -385,11 +379,9 @@ class MicroondasMultifuncional:
 5. Observe el progreso en tiempo real
 6. El sistema le notificará cuando esté listo
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 📊 CÁLCULO DE ENERGÍA:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 El consumo energético se calcula mediante:
 
 kcal/h = (Consumo base) × (Potencia/100) × 60
@@ -399,18 +391,15 @@ Ejemplo:
 • Potencia: 75%
 • Resultado: 4.0 × 0.75 × 60 = 180 kcal/h
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 ⚠️ ADVERTENCIAS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 • No usar combustibles líquidos cerca de llamas abiertas
 • Mantener ventilación adecuada con madera u hojas
 • No abrir durante la cocción
 • Supervisar constantemente el proceso
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+=========================================================
 💡 TECNOLOGÍA INNOVADORA
 Patente pendiente © 2025 Microondas Multifuncional 3000
         """
@@ -503,9 +492,9 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
         
         messagebox.showinfo(
             "¡Cocción Completa! 🎉",
-            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"===============================================\n"
             f"   ¡Tu {self.alimento_actual.get()} está listo!\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"===============================================\n\n"
             f"⏱️  Tiempo total: {self.tiempo_coccion} minutos\n"
             f"🔥 Combustible: {self.combustible_actual.get()}\n"
             f"⚡ Potencia: {self.potencia.get()}%\n"
@@ -651,7 +640,7 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
         eficiencia_text.pack(padx=10, pady=10, fill=tk.BOTH)
         
         tabla_content = "Combustible           kcal/min   Eficiencia   Costo Relativo\n"
-        tabla_content += "──────────────────────────────────────────────────────────\n"
+        tabla_content += "=============================================================\n"
         tabla_content += "⚡ Energía Eléctrica     2.5       Alta           Medio\n"
         tabla_content += "🪵 Madera                4.0       Media          Bajo\n"
         tabla_content += "🍂 Hojas Secas           3.0       Baja           Muy Bajo\n"
@@ -681,7 +670,7 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
         # Contenido del historial
         if self.historial_tiempo:
             hist_content = "Minuto   kcal Acumuladas   Combustible Actual\n"
-            hist_content += "─────────────────────────────────────────────\n"
+            hist_content += "==============================================================\n"
             for i, (tiempo, kcal) in enumerate(zip(self.historial_tiempo, self.historial_kcal)):
                 hist_content += f"{tiempo:^7} {kcal:^15.1f}   {self.combustible_actual.get()}\n"
         else:
