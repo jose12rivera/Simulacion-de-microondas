@@ -37,8 +37,8 @@ class MicroondasMultifuncional:
             "Combustible (Gasolina)": 5.5
         }
         
-        # Tiempo de cocción óptimo por alimento (minutos)
-        self.tiempo_alimento = {
+        # Tiempo de cocción base por alimento (minutos) a potencia 100%
+        self.tiempo_base_alimento = {
             "Pollo": 25,
             "Pavo": 45,
             "Res": 35
@@ -53,6 +53,7 @@ class MicroondasMultifuncional:
         }
         
         self.crear_interfaz()
+        self.actualizar_tiempo_estimado()
         
     def crear_interfaz(self):
         # Frame principal
@@ -201,9 +202,9 @@ class MicroondasMultifuncional:
         alimento_frame.pack(fill=tk.X, padx=15, pady=10)
         
         alimentos = [
-            ("🍗 Pollo (25 min)", "Pollo"),
-            ("🦃 Pavo (45 min)", "Pavo"),
-            ("🥩 Res (35 min)", "Res")
+            ("🍗 Pollo", "Pollo"),
+            ("🦃 Pavo", "Pavo"),
+            ("🥩 Res", "Res")
         ]
         
         for texto, valor in alimentos:
@@ -214,6 +215,24 @@ class MicroondasMultifuncional:
                               activebackground='#3d3d3d', activeforeground='white',
                               command=self.actualizar_alimento)
             rb.pack(anchor=tk.W, pady=5, padx=10)
+        
+        # Tiempo estimado de cocción
+        tiempo_frame = tk.LabelFrame(scrollable_config, text="⏱️ Tiempo Estimado", 
+                                    font=('Arial', 13, 'bold'), bg='#3d3d3d', 
+                                    fg='#ffffff', padx=15, pady=15)
+        tiempo_frame.pack(fill=tk.X, padx=15, pady=10)
+        
+        self.tiempo_estimado_label = tk.Label(tiempo_frame, 
+                                             text="Tiempo estimado: 25 minutos",
+                                             font=('Arial', 12, 'bold'),
+                                             bg='#3d3d3d', fg='#00ff00')
+        self.tiempo_estimado_label.pack(pady=5)
+        
+        self.consumo_estimado_label = tk.Label(tiempo_frame,
+                                              text="Consumo estimado: 0 kcal",
+                                              font=('Arial', 11),
+                                              bg='#3d3d3d', fg='#ffff00')
+        self.consumo_estimado_label.pack(pady=2)
         
         # Potencia con dial circular
         potencia_frame = tk.LabelFrame(scrollable_config, text="🎚️ Control de Potencia", 
@@ -324,7 +343,7 @@ class MicroondasMultifuncional:
         
         # Canvas para gráficos dentro del frame scrollable
         self.stats_canvas = tk.Canvas(self.scrollable_stats, bg='#1a1a1a', highlightthickness=0,
-                                     width=800, height=1200)  # Altura aumentada para contenido extenso
+                                     width=800, height=1200)
         self.stats_canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # === TAB 3: INFORMACIÓN ===
@@ -342,70 +361,77 @@ class MicroondasMultifuncional:
 =========================================================
 🔥 COMBUSTIBLES DISPONIBLES:
 =========================================================
-⚡ Energía Eléctrica: 2.5 kcal/h por minuto
+⚡ Energía Eléctrica: 2.5 kcal/min por minuto
    • Limpio y eficiente
    • Ideal para uso doméstico
    • Control preciso de temperatura
 
-🪵 Madera: 4.0 kcal/h por minuto
+🪵 Madera: 4.0 kcal/min por minuto
    • Mayor potencia calorífica
    • Sabor ahumado natural
    • Requiere ventilación adecuada
 
-🍂 Hojas Secas: 3.0 kcal/h por minuto
+🍂 Hojas Secas: 3.0 kcal/min por minuto
    • Opción ecológica
    • Combustión rápida
    • Bajo costo operativo
 
-⛽ Combustible (Gasolina): 5.5 kcal/h por minuto
+⛽ Combustible (Gasolina): 5.5 kcal/min por minuto
    • Máxima potencia
    • Calentamiento ultra-rápido
    • Uso industrial
 
 =========================================================
-🍖 ALIMENTOS Y TIEMPOS:
+🍖 ALIMENTOS Y TIEMPOS BASE (100% potencia):
 =========================================================
 🍗 Pollo: 25 minutos
 🦃 Pavo: 45 minutos  
 🥩 Res: 35 minutos
 
 =========================================================
-⚙️ INSTRUCCIONES DE USO:
+⚙️ CÁLCULOS DINÁMICOS:
 =========================================================
-1. Seleccione el tipo de combustible deseado
-2. Elija el alimento a cocinar
-3. Ajuste la potencia (10% - 100%)
-4. Presione INICIAR COCCIÓN
-5. Observe el progreso en tiempo real
-6. El sistema le notificará cuando esté listo
-
+• Tiempo Ajustado = Tiempo Base × (100 / Potencia)
+• Consumo por minuto = Consumo Combustible × (Potencia/100)
+• El tiempo y consumo se actualizan automáticamente
 =========================================================
-📊 CÁLCULO DE ENERGÍA:
-=========================================================
-El consumo energético se calcula mediante:
-
-kcal/h = (Consumo base) × (Potencia/100) × 60
-
-Ejemplo:
-• Combustible: Madera (4.0 kcal/h por minuto)
-• Potencia: 75%
-• Resultado: 4.0 × 0.75 × 60 = 180 kcal/h
-
-=========================================================
-⚠️ ADVERTENCIAS:
-=========================================================
-• No usar combustibles líquidos cerca de llamas abiertas
-• Mantener ventilación adecuada con madera u hojas
-• No abrir durante la cocción
-• Supervisar constantemente el proceso
-
-=========================================================
-💡 TECNOLOGÍA INNOVADORA
-Patente pendiente © 2025 Microondas Multifuncional 3000
-        """
+"""
         
         info_text.insert('1.0', info_content)
         info_text.config(state=tk.DISABLED)
+        
+    def calcular_tiempo_ajustado(self):
+        """Calcula el tiempo de cocción ajustado según la potencia"""
+        tiempo_base = self.tiempo_base_alimento[self.alimento_actual.get()]
+        potencia = self.potencia.get()
+        
+        # A mayor potencia, menor tiempo (relación inversa)
+        if potencia > 0:
+            tiempo_ajustado = tiempo_base * (100 / potencia)
+            return max(1, int(tiempo_ajustado))
+        return tiempo_base
+    
+    def calcular_consumo_estimado(self):
+        """Calcula el consumo total estimado"""
+        tiempo_estimado = self.calcular_tiempo_ajustado()
+        consumo_minuto = self.consumo_combustible[self.combustible_actual.get()]
+        potencia = self.potencia.get() / 100.0
+        
+        consumo_total = consumo_minuto * potencia * tiempo_estimado
+        return consumo_total
+    
+    def actualizar_tiempo_estimado(self):
+        """Actualiza las etiquetas de tiempo y consumo estimado"""
+        if not self.cocinando:
+            tiempo_ajustado = self.calcular_tiempo_ajustado()
+            consumo_estimado = self.calcular_consumo_estimado()
+            
+            self.tiempo_estimado_label.config(
+                text=f"Tiempo estimado: {tiempo_ajustado} minutos"
+            )
+            self.consumo_estimado_label.config(
+                text=f"Consumo estimado: {consumo_estimado:.1f} kcal"
+            )
         
     def actualizar_dial(self):
         potencia_val = self.potencia.get()
@@ -417,15 +443,18 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
     def actualizar_potencia(self, valor):
         self.potencia_label.config(text=f"{valor}%")
         self.actualizar_dial()
+        self.actualizar_tiempo_estimado()
         
     def actualizar_combustible(self):
         combustible = self.combustible_actual.get()
         emoji = self.emojis_combustible[combustible]
         self.combustible_indicator.config(text=f"{emoji} {combustible}")
+        self.actualizar_tiempo_estimado()
         
     def actualizar_alimento(self):
         emojis = {"Pollo": "🍗", "Pavo": "🦃", "Res": "🥩"}
         self.canvas.itemconfig(self.alimento_id, text=emojis[self.alimento_actual.get()])
+        self.actualizar_tiempo_estimado()
         
     def iniciar_coccion(self):
         self.cocinando = True
@@ -433,34 +462,40 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
         self.btn_iniciar.config(state=tk.DISABLED)
         self.btn_detener.config(state=tk.NORMAL)
         self.display_estado.config(text="COCINANDO", fg='#00ff00')
+        
+        # Obtener tiempo objetivo ajustado
+        self.tiempo_objetivo = self.calcular_tiempo_ajustado()
+        self.tiempo_transcurrido = 0
+        
         self.cocinar()
         self.girar_plato()
         
     def cocinar(self):
         if self.cocinando:
-            self.tiempo_coccion += 1
+            self.tiempo_transcurrido += 1
             
-            # Calcular kcal
+            # Calcular kcal por minuto actual
             consumo_base = self.consumo_combustible[self.combustible_actual.get()]
             factor_potencia = self.potencia.get() / 100.0
-            kcal_minuto = consumo_base * factor_potencia * 60
+            kcal_minuto = consumo_base * factor_potencia
             self.kcal_consumidas += kcal_minuto
             
             # Actualizar historial
-            self.historial_tiempo.append(self.tiempo_coccion)
+            self.historial_tiempo.append(self.tiempo_transcurrido)
             self.historial_kcal.append(self.kcal_consumidas)
             self.historial_combustibles[self.combustible_actual.get()] += kcal_minuto
             
             # Actualizar displays
-            minutos = self.tiempo_coccion
-            self.lcd_tiempo.config(text=f"{minutos:02d}:00")
-            self.lcd_kcal.config(text=f"{self.kcal_consumidas:.0f} kcal/h")
+            minutos = self.tiempo_transcurrido
+            segundos = 0
+            self.lcd_tiempo.config(text=f"{minutos:02d}:{segundos:02d}")
+            self.lcd_kcal.config(text=f"{self.kcal_consumidas:.1f} kcal")
             
             # Actualizar estadísticas
             self.dibujar_estadisticas()
             
             # Verificar si terminó
-            if self.tiempo_coccion >= self.tiempo_alimento[self.alimento_actual.get()]:
+            if self.tiempo_transcurrido >= self.tiempo_objetivo:
                 self.terminar_coccion()
                 return
             
@@ -495,17 +530,17 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
             f"===============================================\n"
             f"   ¡Tu {self.alimento_actual.get()} está listo!\n"
             f"===============================================\n\n"
-            f"⏱️  Tiempo total: {self.tiempo_coccion} minutos\n"
+            f"⏱️  Tiempo total: {self.tiempo_transcurrido} minutos\n"
             f"🔥 Combustible: {self.combustible_actual.get()}\n"
             f"⚡ Potencia: {self.potencia.get()}%\n"
-            f"📊 Consumo: {self.kcal_consumidas:.1f} kcal/h\n\n"
+            f"📊 Consumo: {self.kcal_consumidas:.1f} kcal\n\n"
             f"¡Buen provecho! 🍽️"
         )
         
     def reiniciar(self):
         self.cocinando = False
         self.estado = "Apagado"
-        self.tiempo_coccion = 0
+        self.tiempo_transcurrido = 0
         self.kcal_consumidas = 0
         self.historial_tiempo = []
         self.historial_kcal = []
@@ -517,13 +552,14 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
         self.lcd_tiempo.config(text="00:00")
         self.lcd_kcal.config(text="0 kcal/h")
         
+        self.actualizar_tiempo_estimado()
         self.dibujar_estadisticas()
         
     def dibujar_estadisticas(self):
         self.stats_canvas.delete("all")
-        w = 800  # Ancho fijo para el canvas de estadísticas
-        h = 1200  # Altura fija para permitir scroll
-        
+        w = 800
+        h = 1200
+
         # Título
         self.stats_canvas.create_text(w//2, 30, text="📊 ANÁLISIS ENERGÉTICO EN TIEMPO REAL", 
                                      font=('Arial', 16, 'bold'), fill='#ffffff')
@@ -535,7 +571,7 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
             x1, y1 = w - 50, 280
             self.stats_canvas.create_rectangle(x0, y0, x1, y1, outline='#666666', width=2)
             self.stats_canvas.create_text((x0+x1)//2, y0-10, 
-                                         text="Consumo kcal/h en el Tiempo", 
+                                         text="Consumo kcal en el Tiempo", 
                                          font=('Arial', 12, 'bold'), fill='#00ff00')
             
             # Dibujar línea
@@ -557,127 +593,24 @@ Patente pendiente © 2025 Microondas Multifuncional 3000
             
             # Etiquetas de ejes
             self.stats_canvas.create_text(x0-30, y1, text="0", fill='white', font=('Arial', 9))
-            self.stats_canvas.create_text(x0-30, y0, text=f"{int(max_kcal)}", fill='white', font=('Arial', 9))
+            self.stats_canvas.create_text(x0-30, y0, text=f"{max_kcal:.1f}", fill='white', font=('Arial', 9))
             self.stats_canvas.create_text(x0, y1+15, text="0", fill='white', font=('Arial', 9))
             self.stats_canvas.create_text(x1, y1+15, text=f"{int(max_tiempo)}", fill='white', font=('Arial', 9))
-            self.stats_canvas.create_text(x0-30, (y0+y1)//2, text="kcal/h", fill='white', font=('Arial', 9))
+            self.stats_canvas.create_text(x0-40, (y0+y1)//2, text="kcal", fill='white', font=('Arial', 9))
             self.stats_canvas.create_text((x0+x1)//2, y1+30, text="Tiempo (min)", fill='white', font=('Arial', 9))
+
+        # Información actual
+        y_info = 320
+        info_text = f"⚙️ CONFIGURACIÓN ACTUAL:\n"
+        info_text += f"🍖 Alimento: {self.alimento_actual.get()}\n"
+        info_text += f"🔥 Combustible: {self.combustible_actual.get()}\n"
+        info_text += f"⚡ Potencia: {self.potencia.get()}%\n"
+        info_text += f"⏱️ Tiempo estimado: {self.calcular_tiempo_ajustado()} min\n"
+        info_text += f"📊 Consumo estimado: {self.calcular_consumo_estimado():.1f} kcal"
         
-        # Gráfico de pastel - Distribución de combustibles
-        y_offset = 320
-        self.stats_canvas.create_text(w//2, y_offset, 
-                                     text="Distribución de Uso por Combustible", 
-                                     font=('Arial', 12, 'bold'), fill='#ff6b35')
-        
-        total = sum(self.historial_combustibles.values())
-        if total > 0:
-            cx, cy = w//2, y_offset + 120
-            radius = 80
-            start_angle = 0
-            
-            colores = {
-                "Energía Eléctrica": "#ffeb3b",
-                "Madera": "#ff9800", 
-                "Hojas Secas": "#8bc34a",
-                "Combustible (Gasolina)": "#f44336"
-            }
-            
-            for combustible, valor in self.historial_combustibles.items():
-                if valor > 0:
-                    extent = (valor / total) * 360
-                    self.stats_canvas.create_arc(cx-radius, cy-radius, cx+radius, cy+radius,
-                                                start=start_angle, extent=extent,
-                                                fill=colores[combustible], outline='white', width=2)
-                    
-                    # Etiqueta
-                    angle_mid = math.radians(start_angle + extent/2)
-                    label_x = cx + (radius + 40) * math.cos(angle_mid)
-                    label_y = cy - (radius + 40) * math.sin(angle_mid)
-                    porcentaje = (valor / total) * 100
-                    
-                    self.stats_canvas.create_text(label_x, label_y, 
-                                                 text=f"{combustible.split()[0]}\n{porcentaje:.1f}%",
-                                                 fill=colores[combustible], 
-                                                 font=('Arial', 9, 'bold'))
-                    
-                    start_angle += extent
-        else:
-            self.stats_canvas.create_text(w//2, y_offset + 100, 
-                                         text="Sin datos - Inicie la cocción", 
-                                         fill='#666666', font=('Arial', 11))
-        
-        # Resumen estadístico
-        y_stats = y_offset + 220
-        self.stats_canvas.create_rectangle(50, y_stats, w-50, y_stats+80, 
-                                          fill='#3d3d3d', outline='#ff6b35', width=2)
-        
-        self.stats_canvas.create_text(w//2, y_stats+15, 
-                                     text="📈 RESUMEN ESTADÍSTICO", 
-                                     font=('Arial', 12, 'bold'), fill='#ffffff')
-        
-        stats_text = f"Tiempo Total: {self.tiempo_coccion} min  |  "
-        stats_text += f"Consumo Total: {self.kcal_consumidas:.1f} kcal/h  |  "
-        stats_text += f"Potencia Actual: {self.potencia.get()}%"
-        
-        self.stats_canvas.create_text(w//2, y_stats+45, 
-                                     text=stats_text, 
-                                     font=('Arial', 10), fill='#00ff00')
-        
-        # Información adicional extensa
-        y_extra = y_stats + 120
-        
-        # Eficiencia por combustible
-        eficiencia_frame = tk.Frame(self.scrollable_stats, bg='#2d2d2d', relief=tk.RAISED, bd=2)
-        eficiencia_frame.place(x=50, y=y_extra, width=w-100, height=200)
-        
-        eficiencia_label = tk.Label(eficiencia_frame, text="📈 EFICIENCIA POR COMBUSTIBLE", 
-                                   font=('Arial', 12, 'bold'), bg='#2d2d2d', fg='#ffffff')
-        eficiencia_label.pack(pady=10)
-        
-        # Tabla de eficiencia
-        eficiencia_text = tk.Text(eficiencia_frame, bg='#1a1a1a', fg='#ffffff', 
-                                 font=('Arial', 10), width=70, height=8, relief=tk.FLAT)
-        eficiencia_text.pack(padx=10, pady=10, fill=tk.BOTH)
-        
-        tabla_content = "Combustible           kcal/min   Eficiencia   Costo Relativo\n"
-        tabla_content += "=============================================================\n"
-        tabla_content += "⚡ Energía Eléctrica     2.5       Alta           Medio\n"
-        tabla_content += "🪵 Madera                4.0       Media          Bajo\n"
-        tabla_content += "🍂 Hojas Secas           3.0       Baja           Muy Bajo\n"
-        tabla_content += "⛽ Combustible           5.5       Muy Alta       Alto\n"
-        
-        eficiencia_text.insert('1.0', tabla_content)
-        eficiencia_text.config(state=tk.DISABLED)
-        
-        # Historial detallado
-        y_historial = y_extra + 230
-        
-        historial_frame = tk.Frame(self.scrollable_stats, bg='#2d2d2d', relief=tk.RAISED, bd=2)
-        historial_frame.place(x=50, y=y_historial, width=w-100, height=300)
-        
-        historial_label = tk.Label(historial_frame, text="📋 HISTORIAL DETALLADO", 
-                                  font=('Arial', 12, 'bold'), bg='#2d2d2d', fg='#ffffff')
-        historial_label.pack(pady=10)
-        
-        historial_text = tk.Text(historial_frame, bg='#1a1a1a', fg='#ffffff', 
-                                font=('Courier', 9), width=80, height=12, relief=tk.FLAT)
-        historial_scroll = tk.Scrollbar(historial_frame, command=historial_text.yview)
-        historial_text.configure(yscrollcommand=historial_scroll.set)
-        
-        historial_text.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.BOTH)
-        historial_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # Contenido del historial
-        if self.historial_tiempo:
-            hist_content = "Minuto   kcal Acumuladas   Combustible Actual\n"
-            hist_content += "==============================================================\n"
-            for i, (tiempo, kcal) in enumerate(zip(self.historial_tiempo, self.historial_kcal)):
-                hist_content += f"{tiempo:^7} {kcal:^15.1f}   {self.combustible_actual.get()}\n"
-        else:
-            hist_content = "No hay datos de historial disponibles.\nInicie la cocción para generar datos."
-        
-        historial_text.insert('1.0', hist_content)
-        historial_text.config(state=tk.DISABLED)
+        self.stats_canvas.create_text(w//2, y_info, text=info_text,
+                                     font=('Arial', 11, 'bold'), fill='#ffff00',
+                                     justify=tk.CENTER)
 
 # Ejecutar aplicación
 if __name__ == "__main__":
